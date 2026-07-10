@@ -496,3 +496,8 @@ body {
 [data-theme="dark"] .text-gold\/80 {
   color: rgba(212, 168, 83, 1) !important;
 }
+
+/* 暗色模式：LangChain Community 图片反转 */
+[data-theme="dark"] img[src*="langchain-community"] {
+  filter: invert(0.85) hue-rotate(180deg);
+}
