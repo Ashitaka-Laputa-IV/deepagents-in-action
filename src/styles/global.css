@@ -23,57 +23,42 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 浅色模式默认 */
-body {
-  --text-color: #1a1a2e;
-  --text-secondary: #2d2d44;
-  --text-muted: #4a4a5a;
-  --bg-color: #faf8f5;
-  --bg-card: #f5f0e8;
-  --border-color: #f5ead6;
-  --accent-color: #b8860b;
-  --accent-hover: #d4a853;
-  --link-color: #2b6cb0;
-  
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-/* 暗色模式 */
-body[data-theme="dark"],
-[data-theme="dark"] body {
-  --text-color: #f5f2ed;
-  --text-secondary: #e8e4df;
-  --text-muted: #b8b4a8;
-  --bg-color: #0f0f1a;
-  --bg-card: #1a1a2e;
-  --border-color: #3a3528;
-  --accent-color: #d4a853;
-  --accent-hover: #e8c47a;
-  --link-color: #6cb0f0;
-  
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-/* 强制覆盖暗色模式下的所有文字颜色 */
+/* ========== 暗色模式 CSS 变量覆盖 ========== */
 [data-theme="dark"] {
-  --color-ink: #f5f2ed;
-  --color-ink-light: #e8e4df;
-  --color-ink-muted: #b8b4a8;
+  --color-ink: #c9c5bf;
+  --color-ink-light: #b8b4a8;
+  --color-ink-muted: #8a8678;
   --color-paper: #0f0f1a;
-  --color-paper-warm: #1a1a2e;
-  --color-gold: #d4a853;
-  --color-gold-light: #e8c47a;
-  --color-gold-pale: #e3a70e;
-  --color-accent: #6cb0f0;
+  --color-paper-warm: #16162a;
+  --color-gold: #c9a227;
+  --color-gold-light: #daa520;
+  --color-gold-pale: #2a2518;
+  --color-accent: #5ba3e8;
 }
 
-/* 暗色模式：全局文字颜色强制覆盖 */
-[data-theme="dark"] * {
-  --tw-text-opacity: 1;
+/* 暗色模式：Tailwind 文字类强制覆盖 */
+[data-theme="dark"] .text-ink,
+[data-theme="dark"] [class*="text-ink"] {
+  color: var(--color-ink) !important;
 }
 
+[data-theme="dark"] .text-ink-light {
+  color: var(--color-ink-light) !important;
+}
+
+[data-theme="dark"] .text-ink-muted {
+  color: var(--color-ink-muted) !important;
+}
+
+[data-theme="dark"] .text-gold {
+  color: var(--color-gold) !important;
+}
+
+[data-theme="dark"] .text-accent {
+  color: var(--color-accent) !important;
+}
+
+/* 暗色模式：无 Tailwind 文字类的纯元素降级 */
 [data-theme="dark"] h1,
 [data-theme="dark"] h2,
 [data-theme="dark"] h3,
@@ -81,41 +66,13 @@ body[data-theme="dark"],
 [data-theme="dark"] h5,
 [data-theme="dark"] h6,
 [data-theme="dark"] p,
-[data-theme="dark"] span:not([class*="text-sky"]):not([class*="text-red"]),
-[data-theme="dark"] div:not([class*="bg-sky"]):not([class*="bg-red"]),
 [data-theme="dark"] li,
-[data-theme="dark"] a:not([href*="bilibili"]):not([href*="xiaohongshu"]):not([href*="xhs"]),
 [data-theme="dark"] td,
 [data-theme="dark"] th,
 [data-theme="dark"] label,
 [data-theme="dark"] strong,
 [data-theme="dark"] em {
-  color: var(--text-color);
-}
-
-[data-theme="dark"] .text-ink,
-[data-theme="dark"] [class*="text-ink"] {
-  color: var(--text-color) !important;
-}
-
-[data-theme="dark"] .text-ink-light {
-  color: var(--text-secondary) !important;
-}
-
-[data-theme="dark"] .text-ink-muted {
-  color: var(--text-muted) !important;
-}
-
-[data-theme="dark"] .text-gold {
-  color: var(--accent-color) !important;
-}
-
-[data-theme="dark"] .text-accent {
-  color: var(--link-color) !important;
-}
-
-[data-theme="dark"] .text-gold-pale {
-  color: var(--accent-hover) !important;
+  color: var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -132,6 +89,19 @@ body {
 ::selection {
   background-color: var(--color-gold-pale);
   color: var(--color-ink);
+}
+
+/* 暗色模式：prose 引用块 */
+[data-theme="dark"] .prose blockquote {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--color-ink-muted) !important;
+  border-left-color: var(--color-gold) !important;
+}
+
+/* 暗色模式：行内代码 */
+[data-theme="dark"] .prose code:not(pre code) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--color-ink) !important;
 }
 
 /* Dot grid background pattern */
@@ -376,11 +346,11 @@ body {
 
 /* 边框颜色覆盖 */
 [data-theme="dark"] .border-gold-pale {
-  border-color: var(--border-color) !important;
+  border-color: var(--color-gold-pale) !important;
 }
 
 [data-theme="dark"] .border-gold {
-  border-color: var(--accent-color) !important;
+  border-color: var(--color-gold) !important;
 }
 
 [data-theme="dark"] .border-gold\/40 {
@@ -397,19 +367,19 @@ body {
 
 /* 背景颜色覆盖 */
 [data-theme="dark"] .bg-paper {
-  background-color: var(--bg-color) !important;
+  background-color: var(--color-paper) !important;
 }
 
 [data-theme="dark"] .bg-paper-warm {
-  background-color: var(--bg-card) !important;
+  background-color: var(--color-paper-warm) !important;
 }
 
 [data-theme="dark"] .bg-gold-pale {
-  background-color: var(--border-color) !important;
+  background-color: var(--color-gold-pale) !important;
 }
 
 [data-theme="dark"] .bg-gold {
-  background-color: var(--accent-color) !important;
+  background-color: var(--color-gold) !important;
 }
 
 [data-theme="dark"] .bg-gold\/40 {

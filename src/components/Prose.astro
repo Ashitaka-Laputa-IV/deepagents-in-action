@@ -9,7 +9,7 @@
   prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-ink-light
   prose-p:leading-[2] prose-p:mb-6 prose-p:text-ink/85
   prose-strong:text-ink prose-strong:font-bold
-  prose-blockquote:border-l-4 prose-blockquote:border-gold prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-ink/75
+  prose-blockquote:border-l-4 prose-blockquote:border-gold prose-blockquote:bg-gold-pale/40 prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-ink/75
   prose-table:w-full prose-table:text-sm
   prose-img:rounded-xl prose-img:shadow-md prose-img:my-8
   prose-a:text-accent prose-a:no-underline prose-a:font-medium hover:prose-a:underline
@@ -66,13 +66,6 @@
   /* 暗色模式：加粗文字 */
   :global([data-theme="dark"]) .prose strong {
     color: var(--color-ink);
-  }
-
-  /* 暗色模式：引用块 */
-  :global([data-theme="dark"]) .prose blockquote {
-    background: rgba(212, 168, 83, 0.08) !important;
-    color: var(--color-ink-muted) !important;
-    border-left-color: var(--color-gold) !important;
   }
 
   /* 暗色模式：引用块内的文字 */

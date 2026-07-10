@@ -140,8 +140,9 @@ const meta = sectionMeta[title] || { num: '?', subtitle: '', accent: '#1a1a2e', 
     background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%);
   }
 
-  /* 暗色模式下罗马数字降低对比度 */
+  /* 暗色模式下罗马数字改用暗金 */
   :global([data-theme="dark"]) .section-banner__num {
-    opacity: 0.15;
+    color: var(--color-gold);
+    opacity: 0.35;
   }
 </style>
