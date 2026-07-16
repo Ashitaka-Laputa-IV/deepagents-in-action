@@ -158,6 +158,8 @@ LangChain 中间件提供两类执行边界。它们都叫 Hook，但适合解�
 
 `write_todos` 工具在 Deep Agents 中是自动内置的。它的底层实现就是 LangChain 的 `TodoListMiddleware`。如果你使用更底层的 `create_agent()`，可以手动添加这个能力：
 
+> **示意片段**：下面聚焦中间件组装，因此不注册额外的应用工具；运行前需要安装示例中的包并配置 `SILICONFLOW_API_KEY`。
+
 ```python
 import os
 from langchain_openai import ChatOpenAI
@@ -174,7 +176,7 @@ model = ChatOpenAI(
 
 agent = create_agent(
     model=model,
-    tools=[run_tests],
+    tools=[],
     middleware=[
         TodoListMiddleware(),
         FilesystemMiddleware(),   # 自动注入 read_file / write_file 等文件工具
@@ -235,6 +237,8 @@ TodoListMiddleware(
 
 理解了中间件机制后，你就能看懂 Deep Agents 内部是怎么组装的。下面这段代码用 LangChain 的 `create_agent()` 手动组合了任务规划和上下文总结两个能力——这基本就是 `create_deep_agent()` 内部做的事情（的一部分）：
 
+> **示意片段**：复用上一个示例定义的 `model`，并省略与中间件组合无关的自定义工具。
+
 ```python
 from langchain.agents import create_agent
 from langchain.agents.middleware import TodoListMiddleware
@@ -242,7 +246,7 @@ from deepagents.middleware import FilesystemMiddleware, SummarizationMiddleware
 
 agent = create_agent(
     model=model,
-    tools=[internet_search],
+    tools=[],
     middleware=[
         TodoListMiddleware(),
         FilesystemMiddleware(),   # read_file / write_file 通过中间件注入
