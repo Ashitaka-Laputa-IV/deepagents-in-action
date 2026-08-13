@@ -164,9 +164,13 @@ agent = create_deep_agent(
 )
 ```
 
-## CompiledSubAgent：集成 LangGraph 工作流
+## CompiledSubAgent：把一个现成的 LangGraph 图当子 Agent
 
-对于更复杂的场景，你可以用一个预构建的 LangGraph 图作为子 Agent。这适用于需要**多步骤、有分支逻辑**的工作流：
+到目前为止我们用的子 Agent 都是"字典方式"——给 `name` / `description` / `system_prompt` / `tools`，然后由 LLM **自由决定**每一步怎么走（搜索几下、写到哪、是否再搜）。这叫"LLM 驱动的自由循环"。
+
+但有些子任务你不希望 LLM 即兴发挥，而是要**严格按你设计好的流程**走，比如"先检索 → 判断够不够 → 不够就再检索 → 够了就生成"。这种固定的、多步骤且有分支/循环的逻辑，用 LangGraph 的**图（Graph）API** 编写最合适。
+
+`CompiledSubAgent` 就是把这个**已经编译好的图**直接包装成一个子 Agent——图的"运行逻辑"成了子 Agent 的"大脑"：
 
 > **示意片段**：`model`、`statistical_analysis` 和 `generate_chart` 代表应用已有的模型与工具；代码只演示如何把已编译图包装成 `CompiledSubAgent`。
 
@@ -174,14 +178,14 @@ agent = create_deep_agent(
 from deepagents import create_deep_agent, CompiledSubAgent
 from langchain.agents import create_agent
 
-# 用 LangChain 创建一个自定义 Agent 图
+# 用 LangChain 创建一个自定义 Agent 图（内部可能已有分支/循环逻辑）
 custom_graph = create_agent(
     model=model,
     tools=[statistical_analysis, generate_chart],
     system_prompt="你是数据分析专家，擅长统计分析和可视化。",
 )
 
-# 包装为 CompiledSubAgent
+# 包装为 CompiledSubAgent：这个图的"运行逻辑"就是子 Agent 的"大脑"
 data_subagent = CompiledSubAgent(
     name="data-analyzer",
     description="执行复杂的数据分析任务，包括统计分析和图表生成",
@@ -194,19 +198,26 @@ agent = create_deep_agent(
 )
 ```
 
-`CompiledSubAgent` 的要求：传入的 LangGraph 图的 State 中必须包含 `"messages"` 键。
+**为什么 State 必须含 `"messages"` 键？** Deep Agents 和子 Agent 之间靠"消息"对话：主 Agent 把任务作为一条消息发进去，子 Agent 把结果作为消息返回。如果图的 State 里没有 `messages` 键，Deep Agents 既塞不进任务、也读不到答案，对接就失败。
 
 ### 字典 vs CompiledSubAgent：怎么选？
 
-| 场景 | 推荐方式 | 理由 |
+核心区别只有一句话：**子 Agent 的"大脑"是谁？**
+
+- 字典方式：大脑是 LLM + 你给的 `system_prompt`，**步骤由 LLM 临场决定**。
+- CompiledSubAgent：大脑是你**预先写死的图**，**步骤由图的节点流向决定**（更可控、可复现）。
+
+| 场景 | 推荐方式 | 判断标准 |
 |---|---|---|
-| 大多数情况 | 字典方式 | 简单直观，配置灵活 |
-| 子 Agent 需要复杂的多步骤工作流 | CompiledSubAgent | 可以用 LangGraph 的图 API 定义分支、循环 |
-| 子 Agent 已经有现成的 LangGraph 图 | CompiledSubAgent | 直接复用，无需重写 |
+| 任务步骤不固定、靠 LLM 灵活发挥 | 字典方式 | "搜索几下、写到哪"由 Agent 自己定 |
+| 需要确定的分支/循环（如"不够就重试"） | CompiledSubAgent | 流程必须严格按设计走 |
+| 你已有一个现成的 LangGraph 图 | CompiledSubAgent | 直接复用，避免重写 |
 
 ## 多子 Agent 协作模式
 
-实际项目中，最常见的模式是**多个专业子 Agent 协作**，由主 Agent 作为协调者：
+最常见的工程模式是**一个主 Agent 当"协调者"，多个专业子 Agent 当"执行者"**。主 Agent 只做两件事：规划（`write_todos`）和整合结果；脏活累活（搜索、分析、写报告）全部委派出去。
+
+这样做的好处，回到本章开头的 **Context Quarantine（上下文隔离）** 动机：每个子 Agent 在自己的独立上下文里干活，它搜了 10 次、写了 5 个文件的中间过程，**主 Agent 一个字都看不到**，只收到最后一份精炼摘要。主 Agent 的上下文因此始终干净。
 
 > **示意片段**：`internet_search`、`api_call`、`statistical_analysis` 和 `format_document` 是应用自定义工具，示例重点是多个专业子 Agent 的分工方式。
 
@@ -227,19 +238,19 @@ subagents = [
         "name": "data-collector",
         "description": "从多个来源收集原始数据，包括网络搜索和 API 调用",
         "system_prompt": "你是数据收集专家。搜索并整理相关数据，返回结构化的数据摘要。",
-        "tools": [internet_search, api_call],
+        "tools": [internet_search, api_call],   # 只给"收集"相关工具
     },
     {
         "name": "data-analyzer",
         "description": "对收集到的数据进行统计分析，提取关键洞察",
         "system_prompt": "你是数据分析专家。分析数据并提取 3-5 个关键发现，控制在 300 字以内。",
-        "tools": [statistical_analysis],
+        "tools": [statistical_analysis],         # 只给"分析"相关工具
     },
     {
         "name": "report-writer",
         "description": "根据分析结果撰写专业报告",
         "system_prompt": "你是技术写作专家。根据提供的分析结果撰写清晰、专业的报告。",
-        "tools": [format_document],
+        "tools": [format_document],              # 只给"写作"相关工具
     },
 ]
 
@@ -255,15 +266,19 @@ agent = create_deep_agent(
 )
 ```
 
+两个设计要点：
+- **每个子 Agent 工具极简（最小权限）**：`data-collector` 拿不到 `format_document`，`report-writer` 拿不到 `api_call`。既安全，又让每个子 Agent 的上下文只围绕自己的活儿，隔离更彻底。
+- **主 Agent 不亲自干活**：它的 `system_prompt` 只讲"委派给谁、怎么整合"，这样主 Agent 上下文不会被搜索/分析细节污染。
+
 ![多子 Agent 协作模式：主 Agent 作为协调者，通过 task() 委派给 data-collector、data-analyzer、report-writer 三个专业子 Agent，每个子 Agent 在独立上下文中工作](../public/imgs/14-framework-multi-subagent.png)
 
-执行流程：
+执行流程（注意每一步的上下文边界）：
 
-1. 主 Agent 制定计划（`write_todos`）
-2. `task(name="data-collector", task="搜索 AI Agent 领域的最新趋势")` → 返回数据摘要
-3. `task(name="data-analyzer", task="分析以下数据...")` → 返回关键发现
-4. `task(name="report-writer", task="根据以下发现撰写报告...")` → 返回报告
-5. 主 Agent 整合输出
+1. 主 Agent 制定计划（`write_todos`）——在主 Agent 自己的上下文里
+2. `task(name="data-collector", task="搜索 AI Agent 领域的最新趋势")` → 子 Agent 在**独立上下文**内搜了 N 次，只返回数据摘要
+3. `task(name="data-analyzer", task="分析以下数据...")` → 另一个独立上下文，只返回关键发现
+4. `task(name="report-writer", task="根据以下发现撰写报告...")` → 另一个独立上下文，只返回报告
+5. 主 Agent 整合输出——它从头到尾只见过三份摘要，从没见过那些搜索的原始结果
 
 每一步的子 Agent 都在独立上下文中工作，主 Agent 只看到精炼的返回结果。
 
