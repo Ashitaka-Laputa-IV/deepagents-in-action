@@ -198,7 +198,9 @@ agent = create_deep_agent(
 )
 ```
 
-**为什么 State 必须含 `"messages"` 键？** Deep Agents 和子 Agent 之间靠"消息"对话：主 Agent 把任务作为一条消息发进去，子 Agent 把结果作为消息返回。如果图的 State 里没有 `messages` 键，Deep Agents 既塞不进任务、也读不到答案，对接就失败。
+**什么是 State？** 在 LangGraph 里，一个"图（Graph）"是一串节点（node）按你定义的流向依次执行；这些节点之间需要共享数据，这个共享的**数据容器**就叫 `State`（通常用 `TypedDict` / Pydantic 定义），每个节点从中读取输入、把产出写回。约定俗成的通道是 `"messages"` 键，整段对话的消息都堆在这个列表里。
+
+**为什么 State 必须含 `"messages"` 键？** Deep Agents 和子 Agent 之间靠"消息"对话：主 Agent 把任务作为一条消息写进这个通道，子 Agent 跑完后把结果也写回这个通道。如果图的 State 里没有 `messages` 键，Deep Agents 既塞不进任务、也读不到答案，对接就失败。
 
 ### 字典 vs CompiledSubAgent：怎么选？
 
