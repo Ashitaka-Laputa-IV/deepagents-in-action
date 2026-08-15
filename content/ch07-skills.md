@@ -395,6 +395,13 @@ agent = create_deep_agent(
 
 企业场景中，运维团队维护一套经过审核的 Skill 库，Agent 只能读取和执行，不能擅自修改。使用 `FilesystemPermission` 配合 `CompositeBackend` 实现：
 
+> **认识 `FilesystemPermission`**：它是 Deep Agents 的**声明式文件权限规则**（第 3 章曾出现、第 11 章详述），无需改后端代码即可控制 Agent 能读写哪些路径。每条规则由三要素组成：
+> - `operations`：受控的操作类型，如 `"read"` / `"write"` / `"edit"` 等；
+> - `paths`：受控路径，支持 glob 通配（如 `/skills/**` 表示 `/skills/` 下所有文件）；
+> - `mode`：处置方式——`"allow"`（放行）、`"deny"`（直接拦截并返回权限错误）、`"interrupt"`（暂停等待人工审批，见下文"写入需审批"一节）。
+>
+> 多条规则按列表顺序叠加，默认语义是"未显式拒绝即允许"（规则顺序与例外边界见第 11 章）。
+
 这里的目标是“允许读取 `/skills/**`，拒绝写入”，而不是关闭全部文件能力。规则顺序、默认允许与旁路边界见[第 11 章：文件系统权限](../ch11-filesystem-permissions/)。
 
 ```python
