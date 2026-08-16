@@ -136,12 +136,14 @@ agent = create_deep_agent(
 
 ### `invoke` 返回什么？
 
-`agent.invoke(..., version="v2")` 返回的对象 `result` 核心就两个字段——**`interrupts` 和 `value` 互斥**：有中断时看 `interrupts`，跑完时看 `value`。
+`agent.invoke(..., version="v2")` 返回的对象 `result` 核心就两个字段——**`interrupts` 和 `value` 互斥**：有中断时看 `interrupts`，跑完时看 `value`。（注意：必须用 `version="v2"`，中断信息才会作为 `interrupts` 字段出现在返回上；用默认接口拿不到它。）
+
+#### 1. 顶层结构
 
 ```
 result
-├── .interrupts   # 列表。无中断时为空 []；有中断时装着所有待处理中断
-└── .value        # 最终状态。无中断时是完整结果；
+├── .interrupts   # 列表[Interrupt]。无中断时为空 []
+└── .value        # 最终状态 dict。无中断时是完整结果；
                  #   有中断时本次没跑完，通常不完整 / None
 ```
 
@@ -151,14 +153,17 @@ result
 print(result.value["messages"][-1].content)
 ```
 
-**有中断**（`result.interrupts` 非空）：每个中断元素 `.value` 里才是你要处理的数据——Agent 想执行的工具调用清单，以及每个工具允许的人类决策：
+#### 2. 有中断时：`interrupts` 列表
+
+`result.interrupts` 每个元素是一个 `Interrupt` 对象，关键字段两个：
 
 ```
 result.interrupts[0]
-└── .value
+├── .id      # 稳定的中断 ID（并行中断时用它把答案映射回对应中断）
+└── .value   # 本次中断的数据体（dict），含下面两个键
     ├── "action_requests" : [              # Agent 想执行的工具调用清单
     │     { "name": "delete_file",
-    │       "arguments": {"path": "temp.txt"} }   # 有的版本字段叫 "args"
+    │       "arguments": {"path": "temp.txt"} }   # 参数键有的版本叫 "args"
     │   ]
     └── "review_configs" : [              # 每个工具对应的审批配置
           { "action_name": "delete_file",
@@ -166,9 +171,48 @@ result.interrupts[0]
         ]
 ```
 
-- `action_requests`：遍历它取**工具名 + 参数**，显示给用户"Agent 想干嘛"；
-- `review_configs`：用 `action_name` 建成字典（`config_map`），查每个工具**允许哪些决策**（approve/edit/reject/respond）；
+逐项说明：
+- `Interrupt.id`：并行分支同时暂停时，多个中断共用一个 `interrupts` 列表。恢复时**不要靠顺序**，而用这个稳定 ID 把"答案"绑定回对应中断（见下文第 5 点）。
+- `action_requests`：遍历它取**工具名（`name`）+ 参数（`arguments`/`args`）**，显示给用户"Agent 想干嘛"；
+- `review_configs`：用 `action_name` 建成"工具名 → 配置"字典（`config_map`），查每个工具**允许哪些决策**（`allowed_decisions`，取值 approve/edit/reject/respond）；
 - 用户选完，把决策装进 `Command(resume={"decisions": [...]})` 送回，图从断点继续。
+
+#### 3. 单中断 vs 并行中断的恢复差异
+
+- **单个中断**：决策直接传值即可，`Command(resume={"decisions": [{"type": "approve"}]})`。
+- **并行中断**：建立"中断 ID → 答案"映射，避免顺序错配：
+
+```python
+resume_map = {intr.id: f"answer for {intr.value}" for intr in result.interrupts}
+agent.invoke(Command(resume=resume_map), config=config, version="v2")
+```
+
+#### 4. 流式接口 `stream` 的返回
+
+用 `agent.stream(...)` / `astream(...)` 时，没有单一 `result` 对象，而是**边执行边产出块**；暂停时通过 `stream.interrupts` 拿到同一批 `Interrupt` 对象（同样含 `.value` 和 `.id`）：
+
+```python
+async for chunk in agent.astream(inputs, config=config, version="v2"):
+    if hasattr(chunk, "interrupts") and chunk.interrupts:
+        # chunk.interrupts 与上面 result.interrupts 是同一结构
+        ...
+```
+
+#### 5. 暂停后的"状态快照"：另一种视角
+
+`interrupts` 是"这次返回里待处理的中断"；如果想看**整个线程当前停在哪**，用 `get_state`（本地）或 `threads.get_state`（SDK）拿状态快照。它和 `interrupts` 是同一份暂停信息的两种视图：
+
+```python
+snapshot = graph.get_state(config)        # 本地 CompiledStateGraph
+# 或：thread_state = client.threads.get_state(thread_id="thread-1")  # SDK
+
+snapshot.values       # 当前图状态（如 messages）
+snapshot.next         # 下一步待执行节点
+snapshot.interrupts   # 待处理的中断（同 result.interrupts 的结构）
+snapshot.checkpoint   # 当前 checkpoint 标识
+```
+
+排查"为什么没继续执行"：若 `interrupts` 还在 → 还缺 `Command(resume=...)`；若 `thread_id` 错 → 看到的是另一个线程的状态。
 
 > **认识 `Command`**：`Command` 是 LangGraph 的"恢复原语"。当中断发生、你拿到人类决策后，用 `Command(resume={...})` 把决策送回**被暂停的图**，执行从断点继续——它和普通 `agent.invoke({...})` 不同：后者是"发起一次新请求"，前者是"把答案递回暂停中的图"。
 
