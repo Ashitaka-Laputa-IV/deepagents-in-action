@@ -138,7 +138,11 @@ agent = create_deep_agent(
 
 > **认识 `Command`**：`Command` 是 LangGraph 的"恢复原语"。当中断发生、你拿到人类的决策后，用 `Command(resume={...})` 把决策送回**被暂停的图**，执行就从断点继续——它和普通的 `agent.invoke({...})` 不同：后者是"发起一次新请求"，前者是"把答案递回暂停中的图"。另外，`result` 是本次 `invoke` 的返回对象，关键字段有两个：`.interrupts`（装着所有待处理的中断）和 `.value`（最终状态，如 `result.value["messages"]`）。
 
-```python
+> **认识"中断返回结构"**：暂停后，`result.interrupts` 是一个列表，每个元素是一个待处理的中断。`result.interrupts[0].value` 是这次中断的**数据体**，里面有两个关键字段：
+> - `action_requests`：Agent 想执行的工具调用清单，每个元素含 `name`（工具名）和 `arguments` / `args`（参数）。代码里 `action["name"]`、`action.get("arguments", action.get("args", {}))` 取的就是这些。
+> - `review_configs`：每个 action 对应的**审批配置**清单，元素含 `action_name`（对应哪个工具）和 `allowed_decisions`（人类可做的决策类型）。代码用 `config_map = {cfg["action_name"]: cfg ...}` 把它建成"工具名 → 配置"的字典，再查 `review_config["allowed_decisions"]`。
+>
+> 一句话：下面那段"展示给用户"的循环，本质就是遍历 `action_requests`，再用 `review_configs` 查出每个工具允许哪些决策并显示出来。
 
 ```python
 import uuid
