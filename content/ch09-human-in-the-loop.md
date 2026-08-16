@@ -19,7 +19,7 @@ Agent 的自主性是一把双刃剑：
 
 ## `interrupt_on` 配置
 
-Deep Agents 通过 `interrupt_on` 参数配置哪些工具需要人工审批。设置后，Deep Agents 会在默认中间件栈中加入 `HumanInTheLoopMiddleware`；如果运行在工具返回前被中断或取消，同一栈里的 `PatchToolCallsMiddleware` 会自动修复消息历史。
+Deep Agents 通过 `interrupt_on` 参数配置哪些工具需要人工审批。设置后，Deep Agents 会在默认中间件栈中加入 `HumanInTheLoopMiddleware`（负责在工具执行前暂停、收集人工决策）；如果运行在工具返回前被中断或取消，同一栈里的 `PatchToolCallsMiddleware` 会**自动修复消息历史**——把那些"被中断、实际并未真正执行"的工具调用从消息记录中清理掉，避免恢复后模型误以为工具已经跑过、从而做出错误判断。
 
 `interrupt_on` 是“工具调用审批”的便捷入口，不是 HITL 的能力边界。当暂停点不对应某个工具——例如发布最终答复前审稿、进入下一阶段前确认，或跨多个工具统一执行策略——可以在自定义 LangChain Middleware 中直接调用底层 `interrupt()`。Deep Agents 的 `middleware=[...]` 参数允许把这类能力注入现有 Harness。
 
@@ -136,6 +136,10 @@ agent = create_deep_agent(
 
 代码实现：
 
+> **认识 `Command`**：`Command` 是 LangGraph 的"恢复原语"。当中断发生、你拿到人类的决策后，用 `Command(resume={...})` 把决策送回**被暂停的图**，执行就从断点继续——它和普通的 `agent.invoke({...})` 不同：后者是"发起一次新请求"，前者是"把答案递回暂停中的图"。另外，`result` 是本次 `invoke` 的返回对象，关键字段有两个：`.interrupts`（装着所有待处理的中断）和 `.value`（最终状态，如 `result.value["messages"]`）。
+
+```python
+
 ```python
 import uuid
 from langgraph.types import Command
@@ -183,9 +187,9 @@ print(result.value["messages"][-1].content)
 
 ### 关键要求
 
-- **必须配置 Checkpointer**：HITL 依赖状态持久化，没有 Checkpointer 无法恢复
-- **必须使用相同的 `thread_id`**：中断和恢复必须在同一个线程中
-- **必须使用 `version="v2"`**：HITL 需要 v2 版本的 invoke 接口
+- **必须配置 Checkpointer**：HITL 依赖状态持久化来保存断点，没有 Checkpointer 就无法恢复（Checkpointer 即第 8 章讲的短期记忆机制）
+- **必须使用相同的 `thread_id`**：中断和恢复必须在同一个线程中，否则运行时找不到那次暂停的状态
+- **必须使用 `version="v2"`**：`v2` 是支持结构化中断返回的 `invoke` 接口——它会把 `interrupts` 作为返回字段暴露出来；用默认接口拿不到中断信息，恢复就无从谈起
 - **决策数量和顺序必须匹配**：`decisions` 要和 `action_requests` 一一对应，顺序不能乱
 
 > 字段名说明：Deep Agents 文档示例里常见 `action_request["args"]`，LangChain 标准 `HumanInTheLoopMiddleware` 示例里展示的是 `action_request["arguments"]`。如果你的审批界面要兼容两种入口，可以像上面的代码一样读取 `arguments`，没有时再回退到 `args`。但恢复 `edit` 决策时，`edited_action` 仍然使用 `args`。
@@ -391,6 +395,8 @@ agent = create_deep_agent(
 本章重点是中断后的审查与恢复；如何组合 `allow`、`deny`、`interrupt`，以及为什么权限不能约束自定义工具或沙箱 `execute`，见[第 11 章：文件系统权限](../ch11-filesystem-permissions/)。
 
 ## 揭开引擎盖：LangGraph 的中断机制
+
+> **这一段往下钻**：下面从 `interrupt_on` 的封装层，一直钻到 LangGraph 的 `interrupt()` 原语、运行时如何保存/恢复状态，以及 5 条使用规则。它是本章最深的"引擎盖"部分——**想快速上手，看懂前面 `interrupt_on` + 中断恢复流程就够了**；只有当你要写自定义审批（如"发布前统一审稿"、多轮表单校验）时，才需要细读后半段。可按需跳读。
 
 `interrupt_on` 的底层是 LangGraph 的<strong>中断（Interrupt）</strong>原语。当你在工具或图节点中直接调用 `interrupt()` 函数时，可以实现更灵活的审批逻辑：
 
