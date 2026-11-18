@@ -12,7 +12,7 @@ from course_notebooks.testing import ScriptedChatModel
 def clean_config(monkeypatch):
     import os
     for key in list(os.environ):
-        if key.startswith(("MODEL_", "SILICONFLOW_", "COURSE_")):
+        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "COURSE_")):
             monkeypatch.delenv(key)
 
 
@@ -24,9 +24,30 @@ def test_default_offline_ignores_credentials_and_dotenv(tmp_path, monkeypatch):
     assert selected_mode() == "offline"
 
 
-def test_live_requires_credentials_without_fallback(tmp_path):
-    with pytest.raises(ValueError, match="SILICONFLOW_API_KEY"):
+def test_live_defaults_to_opencode_go(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENCODE_GO_API_KEY", "example-opencode-key")
+    model = create_model(None, root=tmp_path, mode="live")
+    assert model.model_name == "deepseek-v4.1-flash"
+    assert str(model.openai_api_base).rstrip("/") == "https://opencode.ai/inference/go/v1"
+    assert model.openai_api_key.get_secret_value() == "example-opencode-key"
+    assert model.default_headers["x-opencode-session"].startswith("deepagents-course-")
+
+
+def test_live_requires_opencode_go_key(tmp_path):
+    with pytest.raises(ValueError, match="OPENCODE_GO_API_KEY"):
         create_model(None, root=tmp_path, mode="live")
+
+
+def test_opencode_go_can_be_overridden(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENCODE_GO_API_KEY", "example-opencode-key")
+    monkeypatch.setenv("OPENCODE_GO_BASE_URL", "https://gateway.example.test/v1")
+    monkeypatch.setenv("OPENCODE_GO_MODEL", "example-model")
+    monkeypatch.setenv("OPENCODE_GO_SESSION", "example-session")
+    model = create_model(None, root=tmp_path, mode="live")
+    assert model.model_name == "example-model"
+    assert str(model.openai_api_base).rstrip("/") == "https://gateway.example.test/v1"
+    assert model.default_headers["x-opencode-session"] == "example-session"
+    assert model.openai_api_key.get_secret_value() == "example-opencode-key"
 
 
 def test_siliconflow_requires_an_explicit_model_name(tmp_path, monkeypatch):
@@ -51,6 +72,18 @@ def test_model_configuration_matches_the_requested_siliconflow_model(tmp_path, m
     assert info["temperature"] == model.temperature
     assert info["timeout_seconds"] == model.request_timeout
     assert info["max_retries"] == model.max_retries
+
+
+def test_model_configuration_reports_the_opencode_go_default(tmp_path, monkeypatch):
+    from course_notebooks.model_config import model_configuration
+
+    monkeypatch.setenv("OPENCODE_GO_API_KEY", "example-opencode-key")
+    info = model_configuration(root=tmp_path, mode="live")
+    assert info == {
+        "provider": "opencode-go", "model_name": "deepseek-v4.1-flash",
+        "api_host": "opencode.ai", "temperature": 0,
+        "timeout_seconds": 60, "max_retries": 1,
+    }
 
 
 def test_offline_model_configuration_does_not_load_dotenv(tmp_path, monkeypatch):

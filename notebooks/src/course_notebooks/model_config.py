@@ -1,5 +1,6 @@
 """Explicit offline/live model selection shared by notebooks and local services."""
 import os
+import uuid
 from collections.abc import Mapping
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -8,6 +9,12 @@ from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
 from .streaming_model import StreamingChatOpenAI
+
+
+# Course default: OpenCode Go's OpenAI-compatible gateway.  The key must
+# come from the environment or an uncommitted .env file; never commit it.
+DEFAULT_OPENCODE_GO_BASE_URL = "https://opencode.ai/inference/go/v1"
+DEFAULT_OPENCODE_GO_MODEL = "deepseek-v4.1-flash"
 
 
 def repository_root(start: Path | None = None) -> Path:
@@ -29,22 +36,49 @@ def _live_configuration(root: Path | None, environ: Mapping[str, str] | None = N
     if environ is None:
         load_dotenv((root or repository_root()) / ".env", override=False)
         environ = os.environ
+
+    # 1) Explicit generic provider: all three values are required so a stray
+    #    MODEL_NAME cannot silently redirect a key to the wrong host.
     if environ.get("MODEL_API_KEY") or environ.get("MODEL_BASE_URL"):
         missing = [key for key in ("MODEL_API_KEY", "MODEL_BASE_URL", "MODEL_NAME") if not environ.get(key)]
         if missing:
             raise ValueError("通用模型配置需同时设置 MODEL_API_KEY、MODEL_BASE_URL、MODEL_NAME；缺少：" + ", ".join(missing))
         key, endpoint, name = (environ[k] for k in ("MODEL_API_KEY", "MODEL_BASE_URL", "MODEL_NAME"))
-        provider = "openai-compatible"
-    else:
-        key = environ.get("SILICONFLOW_API_KEY")
-        if not key:
-            raise ValueError("live 模式缺少 SILICONFLOW_API_KEY，或完整的 MODEL_* 配置。")
+        return "openai-compatible", dict(
+            model=name, api_key=key, base_url=endpoint,
+            temperature=0, timeout=60, max_retries=1,
+        )
+
+    # 2) Legacy SiliconFlow opt-in.  Keep it working for existing .env files,
+    #    but the course default below no longer requires it.
+    if environ.get("SILICONFLOW_API_KEY"):
         name = environ.get("MODEL_NAME")
         if not name:
             raise ValueError("live 模式缺少 MODEL_NAME；请按本章说明选择模型，并在 .env 中明确填写。")
         endpoint = environ.get("SILICONFLOW_BASE_URL") or "https://api.siliconflow.cn/v1"
-        provider = "siliconflow"
-    return provider, dict(model=name, api_key=key, base_url=endpoint, temperature=0, timeout=60, max_retries=1)
+        return "siliconflow", dict(
+            model=name, api_key=environ["SILICONFLOW_API_KEY"], base_url=endpoint,
+            temperature=0, timeout=60, max_retries=1,
+        )
+
+    # 3) OpenCode Go is the course default.  The gateway requires a stable
+    #    session header in addition to the bearer key.
+    key = environ.get("OPENCODE_GO_API_KEY")
+    if not key:
+        raise ValueError(
+            "live 模式缺少 OPENCODE_GO_API_KEY；请复制 .env.example 为未提交的 .env 并填写 Key。"
+        )
+    endpoint = environ.get("OPENCODE_GO_BASE_URL") or DEFAULT_OPENCODE_GO_BASE_URL
+    name = environ.get("OPENCODE_GO_MODEL") or DEFAULT_OPENCODE_GO_MODEL
+    session = environ.get("OPENCODE_GO_SESSION") or f"deepagents-course-{uuid.uuid4().hex[:12]}"
+    return "opencode-go", dict(
+        model=name, api_key=key, base_url=endpoint,
+        temperature=0, timeout=60, max_retries=1,
+        default_headers={
+            "x-opencode-session": session,
+            "User-Agent": "deepagents-course/0.7",
+        },
+    )
 
 
 def model_configuration(
@@ -69,10 +103,11 @@ def model_configuration(
 def create_model(
     scripted: BaseChatModel | None, *, root: Path | None = None, mode: str | None = None
 ) -> BaseChatModel:
-    """Return the supplied scripted model offline; require explicit config for live.
+    """Return scripted offline; use OpenCode Go by default in live mode.
 
-    Mode is chosen before loading .env so a stored key cannot opt readers into billing.
-    Generic provider key, endpoint and model must be supplied together.
+    Mode is chosen before loading .env so a stored key cannot opt readers into
+    billing.  Live can be redirected with a complete MODEL_* trio or with the
+    legacy SILICONFLOW_API_KEY + MODEL_NAME pair.
     """
     if selected_mode(mode) == "offline":
         if scripted is None:

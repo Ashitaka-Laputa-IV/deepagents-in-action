@@ -7852,8 +7852,8 @@ uv<span class="w"> </span>run<span class="w"> </span>--project<span class="w"> <
 </pre></div>
 <p>核心依赖：deepagents 0.7.22、langchain 1.4.3、langchain-core 1.6.6、langgraph 1.2.13、langchain-openai 1.6.7；完整依赖由 uv.lock 锁定。下一格输出本次实际环境。</p>
 <p>默认 <strong>offline</strong> 模式使用脚本模型：模型消息是预先写好的，工具函数和 Agent 框架仍真实执行。随附输出来自这个模式；它验证框架机制，不证明真实模型会正确选择工具。需要真实模型时，按 <a href="../README.md">统一配置说明</a> 准备 Key，再在上面的命令末尾加 <code>--mode live</code>。live 需要网络，可能产生调用费用；缺配置或调用失败会直接报错，不会退回脚本模型。</p>
-<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">硅流真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。</p>
-<p>配置：在未提交的根目录 <code>.env</code> 中填写 <code>SILICONFLOW_API_KEY</code> 和完整 <code>MODEL_NAME</code>；公共入口不提供隐含模型默认值。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
+<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">OpenCode Go 真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。</p>
+<p>配置：live 模式默认使用 OpenCode Go 的 <code>deepseek-v4.1-flash</code>；需在未提交的根目录 <code>.env</code> 中填写 <code>OPENCODE_GO_API_KEY</code>，可用 <code>OPENCODE_GO_BASE_URL</code>、<code>OPENCODE_GO_MODEL</code> 覆盖，<code>OPENCODE_GO_SESSION</code> 可选。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
 <p>范围与服务：正常的天气、换算和计算场景使用真实模型；故意制造 Schema 错误和函数异常的场景仍使用脚本模型。无需额外服务。</p>
 </div>
 </div>

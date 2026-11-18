@@ -7836,8 +7836,8 @@ uv<span class="w"> </span>run<span class="w"> </span>--project<span class="w"> <
 <p>逐格学习时，先运行各个定义格，最后在第 7 节一起执行三个阶段。<strong>定义 <code>async def</code> 函数不会启动任务</strong>，直到后面 <code>await</code> 调用它才执行。第 3 节的检查函数第一次可先理解输入输出，核心观察在第 4～7 节。</p>
 <p>默认 offline 仅替换模型选择工具的方式，服务、SDK 和后台任务都真实运行。无需模型 Key、远程部署或 LangSmith Key；live 才请求真实模型，可能产生费用。</p>
 <p>下一格定位仓库目录，并把本章目录加入 Python 模块搜索路径，以便导入章内辅助类 <code>LocalAgentServer</code>。它负责启动和清理进程，不是需要另行安装的第三方包。</p>
-<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">硅流真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。</p>
-<p>配置：在未提交的根目录 <code>.env</code> 中填写 <code>SILICONFLOW_API_KEY</code> 和完整 <code>MODEL_NAME</code>；公共入口不提供隐含模型默认值。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
+<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">OpenCode Go 真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。</p>
+<p>配置：live 模式默认使用 OpenCode Go 的 <code>deepseek-v4.1-flash</code>；需在未提交的根目录 <code>.env</code> 中填写 <code>OPENCODE_GO_API_KEY</code>，可用 <code>OPENCODE_GO_BASE_URL</code>、<code>OPENCODE_GO_MODEL</code> 覆盖，<code>OPENCODE_GO_SESSION</code> 可选。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
 <p>范围与服务：仅主 Agent 选择异步工具时使用真实模型，服务端 researcher 是等待后固定回显的图。需真实本地 Agent Server 和 <code>server</code> 依赖组；不代表两个真实模型完成研究。</p>
 </div>
 </div>

@@ -1,0 +1,17 @@
+# Core runtime pinned to the notebook versions.
+# The ch06 server extras below were resolved and verified together in the
+# course environment; langgraph-api/langgraph-runtime-inmem intentionally
+# supersede the older pins in notebooks/uv.lock for the local server demo.
+deepagents==0.7.22
+langchain==1.4.3
+langchain-core==1.6.6
+langgraph==1.2.13
+langchain-openai==1.6.7
+python-dotenv>=1.0
+
+# Required only by demo/ch06.py (real local LangGraph server).
+langgraph-cli[inmem]==0.4.32
+langgraph-api==0.18.2
+langgraph-runtime-inmem==0.38.2
+psutil==7.2.2
+colorama>=0.4.6; sys_platform == "win32"

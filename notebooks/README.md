@@ -97,7 +97,7 @@ uv run --project notebooks --locked python -m ipykernel install --user --name de
 
 公共 `ScriptedChatModel` 是 LangChain 官方 `FakeMessagesListChatModel` 的薄适配器，只补充 `bind_tools()` 和可选的消息回调。模板与第 1、2 章使用官方响应列表；第 5、6 章通过回调读取当前消息、当前工具集合或运行时任务 ID。响应列表会循环，独立实验应创建新实例；回调不依赖共享调用次数。预设的结束消息不是成功证据，仍须核对真实工具结果。
 
-需要真实模型时，先看下面的[硅流模型验证表](#live-models)。把 [`.env.example`](../.env.example) 复制为仓库根目录未提交的 `.env`，填写 `SILICONFLOW_API_KEY` 和本章要使用的完整 `MODEL_NAME`，再明确选择 `live`。例如第 7 章已有整本通过记录，可以填写 `MODEL_NAME=Qwen/Qwen3-Coder-30B-A3B-Instruct` 后运行：
+需要真实模型时，默认使用 OpenCode Go 的 `deepseek-v4.1-flash`。请先把 [`.env.example`](../.env.example) 复制为仓库根目录未提交的 `.env`，填写 `OPENCODE_GO_API_KEY`，再明确选择 `live`。例如运行第 7 章：
 
 ```bash
 uv run --project notebooks --locked python -m course_notebooks.run ch07-skills \
@@ -106,11 +106,11 @@ uv run --project notebooks --locked python -m course_notebooks.run ch07-skills \
 
 第 2 章研究助手在 live 模式下还会真实调用 Tavily 搜索：需要在 `.env` 中设置 `TAVILY_API_KEY`，安装和运行命令都加上 `--extra search`（完整命令见该 Notebook 开头）。offline 模式使用本地搜索样例，不需要这些。
 
-默认提供商使用 `SILICONFLOW_API_KEY`，`MODEL_NAME` 必填；`SILICONFLOW_BASE_URL` 默认 `https://api.siliconflow.cn/v1`。其他 OpenAI 兼容提供商必须同时设置 `MODEL_API_KEY`、`MODEL_BASE_URL`、`MODEL_NAME`。已有进程环境变量优先于 `.env`，切换模型后请检查开头打印的模型名。模型必须支持工具调用；实际网络请求可能收费。复杂实验需要更可靠的工具调用能力，不能由入门实验的结果推断所有模型均适用。
+默认提供商为 OpenCode Go：`OPENCODE_GO_MODEL` 默认 `deepseek-v4.1-flash`，`OPENCODE_GO_BASE_URL` 默认 `https://opencode.ai/inference/go/v1`，并自动发送 `x-opencode-session` 请求头。也可以用 `OPENCODE_GO_API_KEY`、`OPENCODE_GO_BASE_URL`、`OPENCODE_GO_MODEL` 覆盖。其他 OpenAI 兼容提供商必须同时设置 `MODEL_API_KEY`、`MODEL_BASE_URL`、`MODEL_NAME`；旧的 `SILICONFLOW_API_KEY` + `MODEL_NAME` 仍作为兼容路径保留。已有进程环境变量优先于 `.env`，切换模型后请检查开头打印的模型名。模型必须支持工具调用；实际网络请求可能收费。复杂实验需要更可靠的工具调用能力，不能由入门实验的结果推断所有模型均适用。
 
 交互式内核可在创建模型前设置 `os.environ["COURSE_MODE"] = "live"`；重跑时重新选择模式。仅仅存在 Key 或 `.env` 不会启用真实模型。明确选择 live 后缺配置、认证失败或调用失败都会报错，不自动退回脚本模型。LangSmith 追踪为可选项，本地 in-memory Agent Server 不要求 LangSmith Key。
 
-维护者验证 SiliconFlow 时，设置 `SILICONFLOW_API_KEY` 和实际的 `MODEL_NAME`，单独保存 live 产物，保留默认 offline 示例输出：
+维护者验证其他模型时，设置对应的 `OPENCODE_GO_*` 或 `MODEL_*` 配置，单独保存 live 产物，保留默认 offline 示例输出：
 
 ```bash
 uv run --project notebooks --locked python -m course_notebooks.run ch14-streaming \
@@ -121,9 +121,9 @@ uv run --project notebooks --locked python -m course_notebooks.run ch14-streamin
 
 <a id="live-models"></a>
 
-### 硅流模型验证表
+### 历史模型验证表（硅基流动时期）
 
-核对日期：2026-10-06。下表只收录**整本从第一格执行、原有断言全部通过**的 live 记录；“待验证”表示尚无当前实验版本的完整通过记录。已通过是所列模型的一次执行结果，不保证以后每次都成功。当前提交的 Notebook / Markdown / HTML 输出仍为 offline。
+核对日期：2026-10-06。下表保留的是切换到 OpenCode Go 之前、在硅基流动上完成的**整本 live** 记录，用于追溯，不代表当前默认 `deepseek-v4.1-flash` 的验证结果。已通过是所列模型的一次执行结果，不保证以后每次都成功。当前提交的 Notebook / Markdown / HTML 输出仍为 offline。
 
 | 实验 | 已验证的完整 `MODEL_NAME` / 状态 | 日期与验证版本 | live 范围与服务要求 |
 |---|---|---|---|

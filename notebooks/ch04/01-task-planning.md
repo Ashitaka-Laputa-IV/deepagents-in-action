@@ -38,11 +38,11 @@ uv run --project notebooks --locked python -m course_notebooks.run ch04-task-pla
 
 offline 不联网，框架与工具仍真实执行；固定计划和报告不证明模型具有自主规划能力。第 1 节检查配置，第 2 节起建立并运行完整研究案例。下一格打印运行模式、Python 和核心依赖版本。
 
-### 硅流真实模型（live）
+### OpenCode Go 真实模型（live）
 
 **已验证**：`Qwen/Qwen3-Coder-30B-A3B-Instruct`，2026-10-22 整本 live 通过。验证版本为基于 [`6a3c402`](https://github.com/datawhalechina/deepagents-in-action/commit/6a3c40228720e799d9589572fb090fd9358e48d9) 的本次修订版；此前实测与补充要求见 [#161 评审](https://github.com/datawhalechina/deepagents-in-action/pull/161#pullrequestreview-5600023024)。
 
-配置：真实模型统一在未提交的根目录 `.env` 中填写 `SILICONFLOW_API_KEY` 和完整 `MODEL_NAME`；公共入口不提供隐含模型默认值。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
+配置：live 模式默认使用 OpenCode Go 的 `deepseek-v4.1-flash`；需在未提交的根目录 `.env` 中填写 `OPENCODE_GO_API_KEY`，可用 `OPENCODE_GO_BASE_URL`、`OPENCODE_GO_MODEL` 覆盖，`OPENCODE_GO_SESSION` 可选。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
 
 范围与服务：第 1 节仅检查配置，第 2～4 节的完整案例通过 `create_model()` 切换模式；第 5、7 节读取该案例结果，第 6、8 节始终使用脚本模型和本地资料。live 使用真实模型和 Tavily 搜索，另需 `TAVILY_API_KEY` 与 `search` 依赖组：
 

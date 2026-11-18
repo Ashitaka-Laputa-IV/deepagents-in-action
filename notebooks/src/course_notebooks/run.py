@@ -64,7 +64,7 @@ def kernel_environment(root, mode):
                 env.setdefault(key, value)
     else:
         for key in list(env):
-            if key.startswith(("MODEL_", "SILICONFLOW_", "OPENAI_", "LANGSMITH_", "LANGCHAIN_")):
+            if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "OPENAI_", "LANGSMITH_", "LANGCHAIN_")):
                 del env[key]
         env["LANGSMITH_TRACING"] = "false"
         env["LANGCHAIN_TRACING_V2"] = "false"

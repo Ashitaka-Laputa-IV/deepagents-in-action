@@ -14,11 +14,11 @@
 
 下一格的 `show_runtime()` 打印环境，`TEXT` 是我们准备交给工具的文本。`course_notebooks` 是随课程安装的辅助包：`create_model()` 选择 offline 或 live，`ScriptedChatModel` 提供离线响应。先保持默认 offline，学会观察结果后再切换真实模型。
 
-### 硅流真实模型（live）
+### OpenCode Go 真实模型（live）
 
 **待验证**（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。
 
-配置：在未提交的根目录 `.env` 中填写 `SILICONFLOW_API_KEY` 和完整 `MODEL_NAME`；公共入口不提供隐含模型默认值。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
+配置：live 模式默认使用 OpenCode Go 的 `deepseek-v4.1-flash`；需在未提交的根目录 `.env` 中填写 `OPENCODE_GO_API_KEY`，可用 `OPENCODE_GO_BASE_URL`、`OPENCODE_GO_MODEL` 覆盖，`OPENCODE_GO_SESSION` 可选。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
 
 范围与服务：模型选择 `echo` 工具；Python 工具在本地执行，无额外服务。
 

@@ -231,7 +231,7 @@ def test_failed_write_back_preserves_source_and_reading_copies(tmp_path):
 def test_live_artifacts_record_the_kernel_model_without_credentials(tmp_path, monkeypatch, generic):
     import os
     for key in list(os.environ):
-        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENAI_", "COURSE_")):
+        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "OPENAI_", "COURSE_")):
             monkeypatch.delenv(key)
     # Construct the real client, but do not call an external API in this regression.
     entries = make_repo(tmp_path, {"configured": (
@@ -271,7 +271,7 @@ def test_live_artifacts_record_the_kernel_model_without_credentials(tmp_path, mo
 def test_live_missing_model_fails_before_executing_cells(tmp_path, monkeypatch):
     import os
     for key in list(os.environ):
-        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENAI_", "COURSE_")):
+        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "OPENAI_", "COURSE_")):
             monkeypatch.delenv(key)
     entries = make_repo(tmp_path, {"bad": "raise RuntimeError('cell must not execute')"})
     (tmp_path / ".env").write_text("SILICONFLOW_API_KEY=runner-secret-key\n")
@@ -285,7 +285,7 @@ def test_live_missing_model_fails_before_executing_cells(tmp_path, monkeypatch):
 def test_credentials_in_model_metadata_withhold_artifacts_and_report_value(tmp_path, monkeypatch):
     import os
     for key in list(os.environ):
-        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENAI_", "COURSE_")):
+        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "OPENAI_", "COURSE_")):
             monkeypatch.delenv(key)
     entries = make_repo(tmp_path, {"bad": "print('no model name printed')"})
     (tmp_path / ".env").write_text("SILICONFLOW_API_KEY=runner-secret-key\nMODEL_NAME=runner-secret-key\n")

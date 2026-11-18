@@ -32,11 +32,11 @@ uv run --project notebooks --locked python -m course_notebooks.run ch02-quicksta
 
 默认 **offline** 模式使用脚本模型：模型消息是预先写好的，工具函数和 Agent 框架仍真实执行。随附输出来自这个模式；它验证框架机制，不证明真实模型会正确选择工具。需要真实模型时，按 [统一配置说明](../README.md) 准备 Key，再在上面的命令末尾加 `--mode live`。live 需要网络，可能产生调用费用；缺配置或调用失败会直接报错，不会退回脚本模型。
 
-### 硅流真实模型（live）
+### OpenCode Go 真实模型（live）
 
 **待验证**（2026-10-06 核对）：当前版本尚无整本 live 通过记录，暂不列出已验证型号。先用 offline 学习；补验后再填写完整型号、日期、验证版本和记录链接。
 
-配置：在未提交的根目录 `.env` 中填写 `SILICONFLOW_API_KEY` 和完整 `MODEL_NAME`；公共入口不提供隐含模型默认值。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
+配置：live 模式默认使用 OpenCode Go 的 `deepseek-v4.1-flash`；需在未提交的根目录 `.env` 中填写 `OPENCODE_GO_API_KEY`，可用 `OPENCODE_GO_BASE_URL`、`OPENCODE_GO_MODEL` 覆盖，`OPENCODE_GO_SESSION` 可选。API 地址、固定参数与报告字段见 [README 模型记录说明](../README.md#live-records)。随附输出仍为 offline。
 
 范围与服务：正常的天气、换算和计算场景使用真实模型；故意制造 Schema 错误和函数异常的场景仍使用脚本模型。无需额外服务。
 

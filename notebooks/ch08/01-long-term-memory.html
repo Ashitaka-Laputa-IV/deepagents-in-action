@@ -7861,8 +7861,8 @@ a.anchor-link {
 </table>
 <p>它们都只在这个 Python 进程的内存中。<strong>跨线程可见不等于重启后还在</strong>；生产环境需要持久化的 Store 与 Checkpointer。<code>/memories/preferences.json</code>、<code>/workspace/draft.txt</code> 是 Agent 虚拟路径，不是电脑磁盘路径。</p>
 <p><code>show_runtime()</code> 展示当前模式与依赖版本；<code>show_text()</code> 把工具输出折行。</p>
-<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">硅流真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录。真实模型复测曾在保存场景反复提交同一组错误的 <code>edit_file</code> 参数；本节据此补上了文本参数的具体写法，以及重复错误的上限。暂不列出已验证型号，补验后再填写完整型号、日期、验证版本和记录链接。</p>
-<p>配置：在未提交的根目录 <code>.env</code> 中填写 <code>SILICONFLOW_API_KEY</code> 和完整 <code>MODEL_NAME</code>；公共入口不提供隐含模型默认值。模型必须支持工具调用。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
+<h3 id="%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">OpenCode Go 真实模型（live）<a class="anchor-link" href="#%E7%A1%85%E6%B5%81%E7%9C%9F%E5%AE%9E%E6%A8%A1%E5%9E%8B%EF%BC%88live%EF%BC%89">¶</a></h3><p><strong>待验证</strong>（2026-10-06 核对）：当前版本尚无整本 live 通过记录。真实模型复测曾在保存场景反复提交同一组错误的 <code>edit_file</code> 参数；本节据此补上了文本参数的具体写法，以及重复错误的上限。暂不列出已验证型号，补验后再填写完整型号、日期、验证版本和记录链接。</p>
+<p>配置：live 模式默认使用 OpenCode Go 的 <code>deepseek-v4.1-flash</code>；需在未提交的根目录 <code>.env</code> 中填写 <code>OPENCODE_GO_API_KEY</code>，可用 <code>OPENCODE_GO_BASE_URL</code>、<code>OPENCODE_GO_MODEL</code> 覆盖，<code>OPENCODE_GO_SESSION</code> 可选。API 地址、固定参数与报告字段见 <a href="../README.md#live-records">README 模型记录说明</a>。随附输出仍为 offline。</p>
 <p>范围与服务：模型选择文件工具并填写参数；Backend、Store、Checkpointer、工具参数校验与证据核对真实执行。数据都在内存里，无额外服务。</p>
 </div>
 </div>
