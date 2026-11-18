@@ -12,7 +12,7 @@ from course_notebooks.testing import ScriptedChatModel
 def clean_config(monkeypatch):
     import os
     for key in list(os.environ):
-        if key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "COURSE_")):
+        if key == "OPENCODEGOAPIKEY" or key.startswith(("MODEL_", "SILICONFLOW_", "OPENCODE_GO_", "COURSE_")):
             monkeypatch.delenv(key)
 
 
@@ -36,6 +36,12 @@ def test_live_defaults_to_opencode_go(tmp_path, monkeypatch):
 def test_live_requires_opencode_go_key(tmp_path):
     with pytest.raises(ValueError, match="OPENCODE_GO_API_KEY"):
         create_model(None, root=tmp_path, mode="live")
+
+
+def test_live_accepts_compact_key_alias(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENCODEGOAPIKEY", "example-compact-key")
+    model = create_model(None, root=tmp_path, mode="live")
+    assert model.openai_api_key.get_secret_value() == "example-compact-key"
 
 
 def test_opencode_go_can_be_overridden(tmp_path, monkeypatch):

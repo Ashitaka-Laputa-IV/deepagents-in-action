@@ -4,6 +4,7 @@ Every demo talks to the same OpenAI-compatible endpoint (OpenCode Go) and uses
 the `deepseek-v4.1-flash` model.  Configure it with environment variables:
 
     OPENCODE_GO_API_KEY   required; also read from the repo-root .env
+    OPENCODEGOAPIKEY      alias accepted for convenience
     OPENCODE_GO_BASE_URL  default: https://opencode.ai/inference/go/v1
     OPENCODE_GO_MODEL     default: deepseek-v4.1-flash
 
@@ -30,7 +31,7 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
 
 BASE_URL = os.getenv("OPENCODE_GO_BASE_URL", "https://opencode.ai/inference/go/v1")
 MODEL = os.getenv("OPENCODE_GO_MODEL", "deepseek-v4.1-flash")
-API_KEY = os.getenv("OPENCODE_GO_API_KEY")
+API_KEY = os.getenv("OPENCODE_GO_API_KEY") or os.getenv("OPENCODEGOAPIKEY")
 if not API_KEY:
     raise RuntimeError(
         "缺少 OPENCODE_GO_API_KEY。请复制 .env.example 为仓库根目录的 .env 并填写 Key，"

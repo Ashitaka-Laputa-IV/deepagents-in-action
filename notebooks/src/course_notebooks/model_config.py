@@ -63,7 +63,7 @@ def _live_configuration(root: Path | None, environ: Mapping[str, str] | None = N
 
     # 3) OpenCode Go is the course default.  The gateway requires a stable
     #    session header in addition to the bearer key.
-    key = environ.get("OPENCODE_GO_API_KEY")
+    key = environ.get("OPENCODE_GO_API_KEY") or environ.get("OPENCODEGOAPIKEY")
     if not key:
         raise ValueError(
             "live 模式缺少 OPENCODE_GO_API_KEY；请复制 .env.example 为未提交的 .env 并填写 Key。"
