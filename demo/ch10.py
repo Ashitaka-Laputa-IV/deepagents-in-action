@@ -240,15 +240,16 @@ def main() -> None:
         use_docker = docker_available()
         if use_docker:
             print("Docker is available; starting the pinned container.")
-            from docker_sandbox import DockerSandbox
+            from docker_sandbox import DockerSandbox, container_exists
 
             with DockerSandbox() as backend:
                 name = backend.id
                 section("1. Container properties and the analysis run")
                 exercise(backend, docker=True)
-                section("3. The container is removed on exit")
-                check(not backend.active, "the sandbox marks itself inactive")
-                print("container name:", name)
+            section("3. The container is removed on exit")
+            check(not backend.active, "the sandbox marks itself inactive")
+            check(not container_exists(name), "the container no longer exists")
+            print("container name:", name)
         else:
             print("Docker daemon is not reachable; running the documented local fallback.")
             env = os.environ.copy()
